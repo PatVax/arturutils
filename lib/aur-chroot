@@ -233,7 +233,11 @@ if (( create )); then
 
     if [[ ! -d $directory/root ]]; then
         # shellcheck disable=SC2086
-        $AUR_PACMAN_AUTH mkchroot -C "$pacman_conf" -M "$makepkg_conf" "$directory"/root "${base_packages[@]}"
+        if [[$(pacini --section=extra "$pacman_conf")]]
+            $AUR_PACMAN_AUTH mkchroot -C "$pacman_conf" -M "$makepkg_conf" -f /etc/pacman.d/mirrorlist-arch "$directory"/root "${base_packages[@]}"
+        else
+            $AUR_PACMAN_AUTH mkchroot -C "$pacman_conf" -M "$makepkg_conf" "$directory"/root "${base_packages[@]}"
+        fi
     fi
 fi >&2
 
@@ -260,9 +264,8 @@ if (( update )); then
         fi
     done
 
-    $AUR_PACMAN_AUTH chroot-run -C "$pacman_conf" -M "$makepkg_conf" "$directory"/root \
-         "${bindmounts_ro[@]/#/-b ro:}" \
-         "${bindmounts_rw[@]/#/-b rw:}" pacman -Syu --noconfirm "$@"
+    $AUR_PACMAN_AUTH chroot-run -C "$pacman_conf" -M "$makepkg_conf" \
+    -b "${bindmounts_ro[@]/#/ -oro,bind:} ${bindmounts_rw[@]/#/ -orw,bind:}" "$directory"/root pacman -Syu --noconfirm "$@"
 fi >&2
 
 # print path for processing by other tools (e.g. makepkg --packagelist)
@@ -289,7 +292,7 @@ if (( build )); then
     done
 
     $AUR_PACMAN_AUTH "${auth_args[@]}" mkchrootpkg -r "$directory" \
-         "${bindmounts_ro[@]/#/-b ro:}" "${bindmounts_rw[@]/#/-b rw:}" \
+         -b "${bindmounts_ro[@]/#/ -oro,bind:} ${bindmounts_rw[@]/#/ -orw,bind:}" \
          "${mkchrootpkg_args[@]}" -- "${mkchrootpkg_makepkg_args[@]}"
 fi >&2
 
