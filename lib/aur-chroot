@@ -249,13 +249,13 @@ if (( update )); then
     # shellcheck disable=SC2086
 
     for i in "${!bindmounts_ro[@]}"; do
-        if [[ ! "${bindmounts_ro[$i]}" ~= .*:.* ]]; then
+        if [[ ! "${bindmounts_ro[$i]}" =~ .*:.* ]]; then
           bindmounts_ro[$i]="${bindmounts_ro[$i]}:${bindmounts_ro[$i]}"
         fi
     done
 
     for i in "${!bindmounts_rw[@]}"; do
-        if [[ ! "${bindmounts_rw[$i]}" ~= .*:.* ]]; then
+        if [[ ! "${bindmounts_rw[$i]}" =~ .*:.* ]]; then
           bindmounts_rw[$i]="${bindmounts_rw[$i]}:${bindmounts_rw[$i]}"
         fi
     done
@@ -277,13 +277,13 @@ if (( build )); then
     # shellcheck disable=SC2086
 
     for i in "${!bindmounts_ro[@]}"; do
-        if [[ ! "${bindmounts_ro[$i]}" ~= .*:.* ]]; then
+        if [[ ! "${bindmounts_ro[$i]}" =~ .*:.* ]]; then
           bindmounts_ro[$i]="${bindmounts_ro[$i]}:${bindmounts_ro[$i]}"
         fi
     done
 
     for i in "${!bindmounts_rw[@]}"; do
-        if [[ ! "${bindmounts_rw[$i]}" ~= .*:.* ]]; then
+        if [[ ! "${bindmounts_rw[$i]}" =~ .*:.* ]]; then
           bindmounts_rw[$i]="${bindmounts_rw[$i]}:${bindmounts_rw[$i]}"
         fi
     done
