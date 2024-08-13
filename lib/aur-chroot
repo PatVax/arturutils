@@ -233,7 +233,7 @@ if (( create )); then
 
     if [[ ! -d $directory/root ]]; then
         # shellcheck disable=SC2086
-        if [[$(pacini --section=extra "$pacman_conf")]]
+        if [[$(pacini --section=extra "$pacman_conf")]]; then
             $AUR_PACMAN_AUTH mkchroot -C "$pacman_conf" -M "$makepkg_conf" -f /etc/pacman.d/mirrorlist-arch "$directory"/root "${base_packages[@]}"
         else
             $AUR_PACMAN_AUTH mkchroot -C "$pacman_conf" -M "$makepkg_conf" "$directory"/root "${base_packages[@]}"
