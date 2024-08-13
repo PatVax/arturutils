@@ -225,6 +225,10 @@ if (( create )); then
         base_packages=('base-devel')
     fi
 
+    if [[ $(pacini --section=extra "$pacman_conf") ]]; then
+        base_packages+=('archlinux-keyring')
+    fi
+
     # parent path is not created by mkarchroot (#371)
     if [[ ! -d $directory ]]; then
         # shellcheck disable=SC2086
@@ -233,7 +237,7 @@ if (( create )); then
 
     if [[ ! -d $directory/root ]]; then
         # shellcheck disable=SC2086
-        if [[$(pacini --section=extra "$pacman_conf")]]; then
+        if [[ $(pacini --section=extra "$pacman_conf") ]]; then
             $AUR_PACMAN_AUTH mkchroot -C "$pacman_conf" -M "$makepkg_conf" -f /etc/pacman.d/mirrorlist-arch "$directory"/root "${base_packages[@]}"
         else
             $AUR_PACMAN_AUTH mkchroot -C "$pacman_conf" -M "$makepkg_conf" "$directory"/root "${base_packages[@]}"
