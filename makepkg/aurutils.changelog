@@ -605,7 +605,7 @@ Usage:
 
   $ sudo env AUR_ASROOT=1 aur build --chroot --user <build_user> ...
 
-The above works with `--chroot` (`makechrootpkg -U`). Environment variables in
+The above works with `--chroot` (`mkchrootpkg -U`). Environment variables in
 the root environment are preserved for user commands, similar to `runuser -c`.
 Host builds using `makepkg --syncdeps` to install dependencies require further
 configuration.
@@ -614,7 +614,7 @@ configuration.
 │ WARNING!                                                                     │
 │                                                                              │
 │ Running `aur-build` as root is experimental and disabled by default. If your │
-│ install breaks, you get to keep both pieces.                                 │
+│ install breaks, you get to keep both pieces.                  mkchrootpkg  │
 └──────────────────────────────────────────────────────────────────────────────┘
 
 ## 9
@@ -673,7 +673,7 @@ configuration.
 The `aur-chroot` command-line was changed so that `--create`, `--build` and
 `--update` can be used in a single command. Command-line arguments are now
 exclusively used for packages passed to `mkarchroot` and `arch-nspawn`.
-To set `makechrootpkg` options, the new `--margs` and `--cargs` options are
+To set `mkchrootpkg` options, the new `--margs` and `--cargs` options are
 available. As `aur-build --margs`, these take a comma-delimited string and
 can be specified multiple times. (Issues: #950, #807)
 

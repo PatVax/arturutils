@@ -64,11 +64,11 @@ Other possible agents are `runuser`, `setpriv`, and `systemd-run`.
 > 3. disable the `setuid` bit with `setpriv --no-new-privs`.
 >
 > **Warning**
-> The considerations above do _not_ apply to chroot builds. Building packages with `makechrootpkg`
+> The considerations above do _not_ apply to chroot builds. Building packages with `mkchrootpkg`
 > gives the build process unfettered access to the host, regardless of how the build user is configured:
 > 
-> 1. `makechrootpkg` executes any commands contained in the user's `makepkg.conf(5)` as root;
-> 2. arbitrary paths on the host can be overwritten with `makechrootpkg --bind`;
+> 1. `mkchrootpkg` executes any commands contained in the user's `makepkgmkchrootpkgroot;
+> 2. arbitrary paths on the host can be overwritten with `mkchrootpkg --bind`;
 > 3. any pacman commands inside the nspawn container can be run with `sudo`, including `pacman -U`.
 
 ## sync-list

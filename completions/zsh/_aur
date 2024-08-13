@@ -25,7 +25,7 @@ __aur_list_attributes() {
     fi
 }
 
-# Helper to call out to makepkg/makechrootpkg completion
+# Helper to call out to makepkg/mkchrootpkg completion
 __aur_complete_for()
 {
     service=$1 $_comps[$1]
@@ -41,7 +41,7 @@ _aur_build_sync_args=(
  makepkg'
     '--makepkg-conf=[the makepkg.conf to use for makepkg, for chroot also inside the container]:configuration file: _files'
     '(-A --ignore-arch)'{-A,--ignore-arch}'[ignore a missing or incomplete arch field in the build script]'
-    '(-c --chroot)'{-c,--chroot}'[build packages inside a systemd-nspawn container with archbuild]'
+    '(-c --chroot)'{-c,--chroot}'[build packages inside a chroot container with chroot-run]'
     '(-D --directory)'{-D,--directory=}'[the base directory for containers]:directory: _files -/'
     '(-f --force)'{-f,--force}'[continue the build process if a package with the same name is found]'
     '(-L --log)'{-L,--log}'[enable logging to a text file in the build directory]'
@@ -77,7 +77,7 @@ _aur-build() {
         '--no-sync[do not sync the local repository after building]'
         '--pkgver[run makepkg -od before checking existing packages]'
 
-        # Makechrootpkg options
+        # mkchrootpkg options
         '(-N --namcap)'{-N,--namcap}'[run namcap on the build package]'
         '--checkpkg[run checkpkg on the build package]'
 
@@ -95,7 +95,7 @@ _aur-chroot() {
 
     args=(
         # Operations
-        '(-B --build)'{-B,--build}'[build a package inside the container with makechrootpkg]'
+        '(-B --build)'{-B,--build}'[build a package inside the container with mkchrootpkg]'
         '(-U --update)'{-U,--update}'[update or create the /root copy of the container with arch-nspawn]'
         '--create[create a new container with mkarchroot]'
 
@@ -103,9 +103,9 @@ _aur-chroot() {
         '*--bind-rw=[bind a directory read-write to the container]:directory: _files -/'
         '*--bind=[bind a directory read-only to the container]:directory: _files -/'
         '(-D --directory)'{-D,--directory=}'[the base directory for containers]:directory: _files -/'
-        '*'{--makechrootpkg-args=,--cargs=}'[additional (comma separated) arguments to be passed to makechrootpkg for --build]:arguments:_sequence __aur_complete_for
-     makechrootpkg'
-        '*'{--makepkg-args=,--margs=}'[additional (comma separated) makepkg arguments for makechrootpkg]:arguments:_sequence __aur_complete_for
+        '*'{--mkchrootpkg-args=,--cargs=}'[additional (comma separated) arguments to be passed to mkchrootpkg for --build]:arguments:_sequence __aur_complete_for
+     mkchrootpkg'
+        '*'{--makepkg-args=,--margs=}'[additional (comma separated) makepkg arguments for mkchrootpkg]:arguments:_sequence __aur_complete_for
      makepkg'
         '(-M --makepkg-conf)'{-M,--makepkg-conf=}'[the makepkg.conf to use inside the container]:configuration file: _files'
         '--path[print the path to the container template]'
@@ -386,7 +386,7 @@ _aur() {
 
     local -A cmds
     cmds[build]="build packages to a local repository"
-    cmds[chroot]="build pacman packages with systemd-nspawn"
+    cmds[chroot]="build pacman packages with chroot-run"
     cmds[depends]="retrieve dependencies using aurweb"
     cmds[fetch]="fetch packages from a location"
     cmds[format]="parse JSON input"

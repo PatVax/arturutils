@@ -1,6 +1,6 @@
 .TH AUR-CHROOT 1 2022-03-04 AURUTILS
 .SH NAME
-aur\-chroot \- build pacman packages with systemd-nspawn
+aur\-chroot \- build pacman packages with chroot-run
 .
 .SH SYNOPSIS
 .SY "aur chroot"
@@ -25,7 +25,7 @@ container.
 .TP
 .BR \-B ", " \-\-build
 Build a package inside the container with
-.BR makechrootpkg .
+.BR mkchrootpkg .
 Assumes
 .B \-\-create
 was run at least once.
@@ -80,7 +80,7 @@ if unset).
 If the
 .B \-T
 parameter is specified to
-.BR makechrootpkg ,
+.BR mkchrootpkg ,
 the user container has a random name and is removed on build
 completion.
 .
@@ -144,36 +144,36 @@ are checked in order:
 .br
 .BI /usr/share/devtools/makepkg.conf.d/<machine>.conf
 .
-.SS makechrootpkg options
+.SS mkchrootpkg options
 .TP
-.BI \-\-cargs= ARGS "\fR,\fP \-\-makechrootpkg\-args=" ARGS
+.BI \-\-cargs= ARGS "\fR,\fP \-\-mkchrootpkg\-args=" ARGS
 Arguments (comma-separated) to be passed to
-.B makechrootpkg
+.B mkchrootpkg
 for 
 .BR \-\-build .
 Defaults to
-.BR "makechrootpkg \-cu" .
+.BR "mkchrootpkg \-cu" .
 .
 .TP
 .BI \-\-margs= ARGS "\fR,\fP \-\-makepkg\-args=" ARGS
 Additional (comma-separated)
 .B makepkg 
 arguments for
-.BR makechrootpkg .
+.BR mkchrootpkg .
 A default list of
 .BR makepkg (8)
 arguments can be listed with
-.BR "makechrootpkg \-\-help" .
+.BR "mkchrootpkg \-\-help" .
 .
 .TP
 .B \-\-bind
 Bind a directory read-only to the container.
-.RB ( makechrootpkg " " \-D )
+.RB ( mkchrootpkg " " \-D )
 .
 .TP
 .B \-\-bind\-rw
 Bind a directory read-write to the container.
-.RB ( makechrootpkg " " \-d )
+.RB ( mkchrootpkg " " \-d )
 .
 .TP
 .BR \-\-checkpkg
@@ -189,7 +189,7 @@ on the built package.
 .
 .TP
 .BR \-T ", " \-\-temp
-Build in a temporary container. (\fBmakechrootpkg \-T\fR) Temporary
+Build in a temporary container. (\fBmkchrootpkg \-T\fR) Temporary
 means that the user container has a random name and is removed on
 build completion.
 .
@@ -197,7 +197,7 @@ build completion.
 .BI \-\-user= USER
 Run the host
 .BR makepkg (8)
-instance as the specified user. (\fBmakechrootpkg \-U\fR)
+instance as the specified user. (\fBmkchrootpkg \-U\fR)
 .
 .SH ENVIRONMENT
 .TP
@@ -205,7 +205,7 @@ instance as the specified user. (\fBmakechrootpkg \-U\fR)
 The agent used to elevate commands. If unset,
 .BR sudo (8)
 is used. When running
-.BR makechrootpkg ,
+.BR mkchrootpkg ,
 the following variables should be preserved:
 .IR PKGDEST ,
 .IR GNUPGHOME
@@ -218,7 +218,7 @@ which assumes an
 directive or a
 .BR SETENV
 tag for
-.BR /usr/bin/makechrootpkg .
+.BR /usr/bin/mkchrootpkg .
 See
 .B SETENV
 in
@@ -235,10 +235,10 @@ The directory where packages are placed. If unset, the current directory
 is used. See
 .BR makepkg.conf (5)
 and
-.BR "makechrootpkg \-h" .
+.BR "mkchrootpkg \-h" .
 .
 .SH NOTES
-.SS Building with makechrootpkg
+.SS Building with mkchrootpkg
 Changes to the pacman database are
 .I not
 propagated from the container to the local system. Packages must be
@@ -246,7 +246,7 @@ installed and updated separately, typically through
 .BI "pacman \-Syu " package_name\fR.
 .PP
 Package conflicts inside the container must be resolved manually, as
-.B makechrootpkg
+.B mkchrootpkg
 uses
 .B "makepkg \-\-noconfirm \-s"
 internally. For example, to replace
@@ -269,7 +269,7 @@ In particular, paths to
 repositories are passed to
 .B arch\-nspawn
 and
-.B makechrootpkg
+.B mkchrootpkg
 with
 .BR \-\-bind
 and
@@ -295,7 +295,7 @@ is run as the
 user, create the following sudoers policy:
 .EX
 
-  archie ALL = (root) NOPASSWD: SETENV: /usr/bin/makechrootpkg
+  archie ALL = (root) NOPASSWD: SETENV: /usr/bin/mkchrootpkg
   archie ALL = (root) NOPASSWD: /usr/bin/mkarchroot, /usr/bin/arch-nspawn
 
 .EE
@@ -306,17 +306,17 @@ with the respective
 .PP
 .B Warning:
 Due to bugs in
-.BR makechrootpkg ,
+.BR mkchrootpkg ,
 a
 .I NOPASSWD
 rule for
-.I /usr/bin/makechrootpkg
+.I /usr/bin/mkchrootpkg
 is equivalent to
 .IR "NOPASSWD: ALL" .
 .
 .SS Using ccache and distcc
 As in
-.BR "Building with makechrootpkg" ,
+.BR "Building with mkchrootpkg" ,
 install the required packages:
 .EX
 
@@ -364,7 +364,7 @@ for details.
 .SH BUGS
 .B PKGDEST
 is not checked for existing packages when building with
-.BR makechrootpkg .
+.BR mkchrootpkg .
 This happens because packages are built to the
 .B /build
 path inside the container, and moved afterward to
@@ -386,9 +386,9 @@ Signing packages should thus be done in the host environment e.g. with
 Default
 .B makepkg
 arguments used in
-.B makechrootpkg
+.B mkchrootpkg
 (as listed in
-.BR "makechrootpkg \-h" )
+.BR "mkchrootpkg \-h" )
 can be extended but not overridden. In particular, package conflicts
 can not solved interactively.
 .RB ( "makepkg \-\-noconfirm" )

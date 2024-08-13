@@ -86,7 +86,7 @@ opt_long=('arg-file:' 'chroot' 'database:' 'force' 'root:' 'sign' 'gpg-sign'
           'makepkg-conf:' 'bind:' 'bind-rw:' 'prevent-downgrade' 'temp'
           'syncdeps' 'clean' 'namcap' 'checkpkg' 'makepkg-args:' 'user:'
           'margs:' 'buildscript:' 'null' 'dbext:' 'cleanbuild' 'cargs:'
-          'makechrootpkg-args:')
+          'mkchrootpkg-args:')
 opt_hidden=('dump-options' 'ignorearch' 'noconfirm' 'nocheck' 'nosync' 'repo:'
             'results:' 'results-append:' 'status')
 
@@ -171,7 +171,7 @@ while true; do
             shift; chroot_build_args+=(--margs "$1")
             IFS=, read -a arg -r <<< "$1"
             makepkg_args+=("${arg[@]}") ;;
-        --makechrootpkg-args|--cargs)
+        --mkchrootpkg-args|--cargs)
             shift; chroot_build_args+=(--cargs "$1") ;;
         # repo-add options
         -v|--verify)
@@ -333,7 +333,7 @@ fi
 if (( chroot )); then
     # Update pacman and makepkg configuration for the chroot build
     # queue. A full system upgrade is run on the /root container to
-    # avoid lenghty upgrades for makechrootpkg -u.
+    # avoid lenghty upgrades for mkchrootpkg -u.
     aur chroot "${chroot_args[@]}" --create --update
 fi
 

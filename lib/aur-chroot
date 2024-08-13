@@ -1,5 +1,5 @@
 #!/bin/bash
-# aur-chroot - build packages with systemd-nspawn
+# aur-chroot - build packages with chroot-run
 [[ -v AUR_DEBUG ]] && set -o xtrace
 set -o errexit
 argv0=chroot
@@ -9,8 +9,8 @@ machine=$(uname -m)
 
 # default arguments
 directory=/var/lib/aurbuild/$machine
-makechrootpkg_args=(-cu)  # XXX: allow unsetting these options?
-makechrootpkg_makepkg_args=()
+mkchrootpkg_args=(-cu)  # XXX: allow unsetting these options?
+mkchrootpkg_makepkg_args=()
 
 # default options
 update=0 build=0 create=0 status=0 print_path=0
@@ -57,7 +57,7 @@ usage() {
 opt_short='C:D:M:x:ABNTU'
 opt_long=('directory:' 'pacman-conf:' 'makepkg-conf:' 'build' 'update'
           'create' 'bind:' 'bind-rw:' 'user:' 'makepkg-args:'
-          'ignorearch' 'namcap' 'checkpkg' 'temp' 'makechrootpkg-args:'
+          'ignorearch' 'namcap' 'checkpkg' 'temp' 'mkchrootpkg-args:'
           'margs:' 'cargs:' 'nocheck' 'suffix:')
 opt_hidden=('dump-options' 'status' 'path')
 
@@ -84,13 +84,13 @@ while true; do
             print_path=1 ;;
         # makepkg options (`--build`)
         -A|--ignorearch)
-            makechrootpkg_makepkg_args+=(--ignorearch) ;;
+            mkchrootpkg_makepkg_args+=(--ignorearch) ;;
         --nocheck)
-            makechrootpkg_makepkg_args+=(--nocheck) ;;
+            mkchrootpkg_makepkg_args+=(--nocheck) ;;
         # XXX: cannot take arguments that contain commas (e.g. for file paths)
         --makepkg-args|--margs)
             shift; IFS=, read -a arg -r <<< "$1"
-            makechrootpkg_makepkg_args+=("${arg[@]}") ;;
+            mkchrootpkg_makepkg_args+=("${arg[@]}") ;;
         # devtools options (`--build`)
         -C|--pacman-conf)
             shift; pacman_conf=$1 ;;
@@ -103,17 +103,17 @@ while true; do
         --bind-rw)
             shift; bindmounts_rw+=("$1") ;;
         -N|--namcap)
-            makechrootpkg_args+=(-n) ;;
+            mkchrootpkg_args+=(-n) ;;
         --checkpkg)
-            makechrootpkg_args+=(-C) ;;
+            mkchrootpkg_args+=(-C) ;;
         -T|--temp)
-            makechrootpkg_args+=(-T) ;;
+            mkchrootpkg_args+=(-T) ;;
         --user)
-            shift; makechrootpkg_args+=(-U "$1") ;;
+            shift; mkchrootpkg_args+=(-U "$1") ;;
         # XXX: cannot take arguments that contain commas (e.g. for file paths)
-        --makechrootpkg-args|--cargs)
+        --mkchrootpkg-args|--cargs)
             shift; IFS=, read -a arg -r <<< "$1"
-            makechrootpkg_args+=("${arg[@]}") ;;
+            mkchrootpkg_args+=("${arg[@]}") ;;
         # other options
         --dump-options)
             printf -- '--%s\n' "${opt_long[@]}" ${AUR_DEBUG+"${opt_hidden[@]}"}
@@ -219,7 +219,7 @@ if (( create )); then
 
     # XXX: use pacini to not process Include directives in pacman.conf
     # (not supported by devtools)
-    elif [[ $(pacini --section=multilib "$pacman_conf") ]] && [[ $machine == "x86_64" ]]; then
+    elif [[ $(pacini --section=lib32 "$pacman_conf") ]] && [[ $machine == "x86_64" ]]; then
         base_packages=('base-devel' 'multilib-devel')
     else
         base_packages=('base-devel')
@@ -233,7 +233,7 @@ if (( create )); then
 
     if [[ ! -d $directory/root ]]; then
         # shellcheck disable=SC2086
-        $AUR_PACMAN_AUTH mkarchroot -C "$pacman_conf" -M "$makepkg_conf" "$directory"/root "${base_packages[@]}"
+        $AUR_PACMAN_AUTH mkchroot -C "$pacman_conf" -M "$makepkg_conf" "$directory"/root "${base_packages[@]}"
     fi
 fi >&2
 
@@ -246,11 +246,23 @@ if [[ ! -d $directory/root ]]; then
 fi
 
 if (( update )); then
-    # locking is done by systemd-nspawn
     # shellcheck disable=SC2086
-    $AUR_PACMAN_AUTH arch-nspawn -C "$pacman_conf" -M "$makepkg_conf" "$directory"/root \
-         "${bindmounts_ro[@]/#/--bind-ro=}" \
-         "${bindmounts_rw[@]/#/--bind=}" pacman -Syu --noconfirm "$@"
+
+    for i in "${!bindmounts_ro[@]}"; do
+        if [[ ! "${bindmounts_ro[$i]}" ~= .*:.* ]]; then
+          bindmounts_ro[$i]="${bindmounts_ro[$i]}:${bindmounts_ro[$i]}"
+        fi
+    done
+
+    for i in "${!bindmounts_rw[@]}"; do
+        if [[ ! "${bindmounts_rw[$i]}" ~= .*:.* ]]; then
+          bindmounts_rw[$i]="${bindmounts_rw[$i]}:${bindmounts_rw[$i]}"
+        fi
+    done
+
+    $AUR_PACMAN_AUTH chroot-run -C "$pacman_conf" -M "$makepkg_conf" "$directory"/root \
+         "${bindmounts_ro[@]/#/-b ro:}" \
+         "${bindmounts_rw[@]/#/-b rw:}" pacman -Syu --noconfirm "$@"
 fi >&2
 
 # print path for processing by other tools (e.g. makepkg --packagelist)
@@ -260,12 +272,25 @@ if (( print_path )); then
 fi
 
 if (( build )); then
-    # use makechrootpkg -c as default build command (sync /root container)
-    # arguments after -- are used as makechrootpkg arguments
+    # use mkchrootpkg -c as default build command (sync /root container)
+    # arguments after -- are used as mkchrootpkg arguments
     # shellcheck disable=SC2086
-    $AUR_PACMAN_AUTH "${auth_args[@]}" makechrootpkg -r "$directory" \
-         "${bindmounts_ro[@]/#/-D}" "${bindmounts_rw[@]/#/-d}" \
-         "${makechrootpkg_args[@]}" -- "${makechrootpkg_makepkg_args[@]}"
+
+    for i in "${!bindmounts_ro[@]}"; do
+        if [[ ! "${bindmounts_ro[$i]}" ~= .*:.* ]]; then
+          bindmounts_ro[$i]="${bindmounts_ro[$i]}:${bindmounts_ro[$i]}"
+        fi
+    done
+
+    for i in "${!bindmounts_rw[@]}"; do
+        if [[ ! "${bindmounts_rw[$i]}" ~= .*:.* ]]; then
+          bindmounts_rw[$i]="${bindmounts_rw[$i]}:${bindmounts_rw[$i]}"
+        fi
+    done
+
+    $AUR_PACMAN_AUTH "${auth_args[@]}" mkchrootpkg -r "$directory" \
+         "${bindmounts_ro[@]/#/-b ro:}" "${bindmounts_rw[@]/#/-b rw:}" \
+         "${mkchrootpkg_args[@]}" -- "${mkchrootpkg_makepkg_args[@]}"
 fi >&2
 
 # vim: set et sw=4 sts=4 ft=sh:

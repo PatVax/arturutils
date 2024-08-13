@@ -1,6 +1,6 @@
 __Before filing a bug, check the following:__
 
-1) Do you use the latest release of aurutils and its dependencies? If so,
+1) Do you use the latest release of arturutils and its dependencies? If so,
 is the issue reproducible from the master branch?
 2) Does the package conform to 
 [`PKGBUILD(5)`](https://www.archlinux.org/pacman/PKGBUILD.5.html) and the 
